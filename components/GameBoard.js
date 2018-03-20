@@ -29,16 +29,27 @@ export default class GameBoard extends Component {
     AIInputs: number[],
     userInputs: number[],
     result: number,
-    round: number
+    round: number,
+    board: [],
+    huPlayer: string,
+    aiPlayer: string,
+    iter: number,
+    roundAI: number
   };
 
   constructor() {
     super()
-    this.state= {
+    this.minimax = this.minimax.bind(this);
+    this.state = {
       AIInputs: [],
       userInputs: [],
       result: GAME_RESULT_NO,
-      round: 0
+      round: 0,
+      board: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+      huPlayer: "P",
+      aiPlayer: "C",
+      iter: 0,
+      roundAI: 0
     }
   }
 
@@ -48,11 +59,16 @@ export default class GameBoard extends Component {
       userInputs: [],
       AIInputs: [],
       result: GAME_RESULT_NO,
-      round: round + 1
+      round: round + 1,
+      board: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+      huPlayer: "P",
+      aiPlayer: "C",
+      iter: 0,
+      roundAI: 0
     })
     setTimeout(() => {
       if (round % 2 === 0) {
-        this.AIAction()
+        this.AIAction('first')
       }
     }, 5)
   }
@@ -69,26 +85,29 @@ export default class GameBoard extends Component {
       (locationX >= d.startX && locationX <= d.endX) &&
       (locationY >= d.startY && locationY <= d.endY))
 
-      if (area && inputs.every(d => d !== area.id)) {
-        this.setState({ userInputs: userInputs.concat(area.id) })
-        setTimeout(() => {
-          this.judgeWinner()
-          this.AIAction()
-        }, 5)
-      }
+    if (area && inputs.every(d => d !== area.id)) {
+      this.state.board[area.id] = "P";
+      this.setState({ userInputs: userInputs.concat(area.id) })
+      setTimeout(() => {
+        this.judgeWinner()
+        this.AIAction()
+      }, 5)
+    }
   }
 
-  AIAction() {
+  AIAction(isFirst) {
+    this.state.roundAI++;
     const { userInputs, AIInputs, result } = this.state
     if (result !== -1) {
       return
     }
-    while(true) {
+    this.state.roundAI++;
+    while (true) {
       const inputs = userInputs.concat(AIInputs)
-
-      const randomNumber = Math.round(Math.random() * 8.3)
-      if (inputs.every(d => d !== randomNumber)) {
-        this.setState({ AIInputs: AIInputs.concat(randomNumber) })
+      var indexValue = isFirst? Math.round(Math.random() * 8.3): this.minimax(this.state.board, this.state.aiPlayer, this).index;
+      this.state.board[indexValue] = "C";
+      if (inputs.every(d => d !== indexValue)) {
+        this.setState({ AIInputs: AIInputs.concat(indexValue) })
         this.judgeWinner()
         break
       }
@@ -107,7 +126,7 @@ export default class GameBoard extends Component {
     const { userInputs, AIInputs, result } = this.state
     const inputs = userInputs.concat(AIInputs)
 
-    if (inputs.length >= 5 ) {
+    if (inputs.length >= 5) {
       let res = this.isWinner(userInputs)
       if (res && result !== GAME_RESULT_USER) {
         return this.setState({ result: GAME_RESULT_USER })
@@ -119,8 +138,91 @@ export default class GameBoard extends Component {
     }
 
     if (inputs.length === 9 &&
-        result === GAME_RESULT_NO && result !== GAME_RESULT_TIE) {
+      result === GAME_RESULT_NO && result !== GAME_RESULT_TIE) {
       this.setState({ result: GAME_RESULT_TIE })
+    }
+  }
+
+  reset() {
+    this.state.roundAI = 0;
+    this.state.board = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+    this.restart();
+  }
+
+  minimax(reboard, player, that) {
+    that.state.iter++;
+    let array = that.avail(reboard);
+    if (that.winning(reboard, that.state.huPlayer)) {
+      return {
+        score: -10
+      };
+    } else if (that.winning(reboard, that.state.aiPlayer)) {
+      return {
+        score: 10
+      };
+    } else if (array.length === 0) {
+      return {
+        score: 0
+      };
+    }
+
+    var moves = [];
+    for (var i = 0; i < array.length; i++) {
+      var move = {};
+      move.index = reboard[array[i]];
+      reboard[array[i]] = player;
+      if (player == that.state.aiPlayer) {
+        var g = that.minimax(reboard, that.state.huPlayer, that);
+        move.score = g.score;
+      } else {
+        var g = that.minimax(reboard, that.state.aiPlayer, that);
+        move.score = g.score;
+      }
+      reboard[array[i]] = move.index;
+      moves.push(move);
+    }
+
+    var bestMove;
+    if (player === that.state.aiPlayer) {
+      var bestScore = -10000;
+      for (var i = 0; i < moves.length; i++) {
+        if (moves[i].score > bestScore) {
+          bestScore = moves[i].score;
+          bestMove = i;
+        }
+      }
+    } else {
+      var bestScore = 10000;
+      for (var i = 0; i < moves.length; i++) {
+        if (moves[i].score < bestScore) {
+          bestScore = moves[i].score;
+          bestMove = i;
+        }
+      }
+    }
+    return moves[bestMove];
+  }
+
+  //available spots
+  avail(reboard) {
+    return reboard.filter(s => s != "P" && s != "C");
+  }
+
+  // winning combinations
+  winning(board, player) {
+    if (
+      (board[0] == player && board[1] == player && board[2] == player) ||
+      (board[3] == player && board[4] == player && board[5] == player) ||
+      (board[6] == player && board[7] == player && board[8] == player) ||
+      (board[0] == player && board[3] == player && board[6] == player) ||
+      (board[1] == player && board[4] == player && board[7] == player) ||
+      (board[2] == player && board[5] == player && board[8] == player) ||
+      (board[0] == player && board[4] == player && board[8] == player) ||
+      (board[2] == player && board[4] == player && board[6] == player)
+    ) {
+      return true;
+    } else {
+      return false;
     }
   }
 
@@ -138,7 +240,7 @@ export default class GameBoard extends Component {
                 width: 3,
                 height: 306,
                 transform: [
-                  {translateX: 200}
+                  { translateX: 200 }
                 ]
               }]}
             />
@@ -147,7 +249,7 @@ export default class GameBoard extends Component {
                 width: 306,
                 height: 3,
                 transform: [
-                  {translateY: 100}
+                  { translateY: 100 }
                 ]
               }]}
             />
@@ -156,7 +258,7 @@ export default class GameBoard extends Component {
                 width: 306,
                 height: 3,
                 transform: [
-                  {translateY: 200}
+                  { translateY: 200 }
                 ]
               }]}
             />
