@@ -17,19 +17,21 @@ export default class Cross extends Component {
     return (
       <View style={[styles.container, {
         transform: [
-          {translateX: (xTranslate ? xTranslate : 100) + 25},
-          {translateY: (yTranslate ? yTranslate : 10) - 12},
+          {translateX: (xTranslate ? xTranslate : 100)},
+          {translateY: (yTranslate ? yTranslate : 10)},
         ]
       }]}>
         <View style={[styles.line, {
           transform: [
-            {rotate: '45deg'},
+            {
+              rotate: '45deg',
+            },
           ],
           backgroundColor: color ? color : '#000'
         }]} />
-        <View style={[styles.line, {
+        <View style={[styles.line1, {
           transform: [
-            {rotate: '135deg'},
+            {rotate: '45deg'},
           ],
           backgroundColor: color ? color : '#000'
         }]} />
@@ -47,7 +49,20 @@ const styles = StyleSheet.create({
   line: {
     position: 'absolute',
     width: 8,
-    height: 105,
+    height: 70,
+    left:'50%',
+    top:'50%',
+    marginLeft:-4,
+    marginTop:-35,
+  },
+  line1: {
+    position: 'absolute',
+    width: 70,
+    height: 8,
+    left:'50%',
+    top:'50%',
+    marginLeft:-35,
+    marginTop:-4,
   },
 
 })

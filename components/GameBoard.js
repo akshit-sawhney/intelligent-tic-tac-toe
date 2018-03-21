@@ -51,6 +51,7 @@ export default class GameBoard extends Component {
       iter: 0,
       roundAI: 0
     }
+
   }
 
   restart() {
@@ -104,7 +105,7 @@ export default class GameBoard extends Component {
     this.state.roundAI++;
     while (true) {
       const inputs = userInputs.concat(AIInputs)
-      var indexValue = isFirst? Math.round(Math.random() * 8.3): this.minimax(this.state.board, this.state.aiPlayer, this).index;
+      var indexValue = isFirst? Math.round(Math.random() * 8.3): this.minimax(this.state.board, this.state.aiPlayer).index;
       this.state.board[indexValue] = "C";
       if (inputs.every(d => d !== indexValue)) {
         this.setState({ AIInputs: AIInputs.concat(indexValue) })
@@ -149,14 +150,14 @@ export default class GameBoard extends Component {
     this.restart();
   }
 
-  minimax(reboard, player, that) {
-    that.state.iter++;
-    let array = that.avail(reboard);
-    if (that.winning(reboard, that.state.huPlayer)) {
+  minimax(reboard, player) {
+    this.state.iter++;
+    let array = this.avail(reboard);
+    if (this.winning(reboard, this.state.huPlayer)) {
       return {
         score: -10
       };
-    } else if (that.winning(reboard, that.state.aiPlayer)) {
+    } else if (this.winning(reboard, this.state.aiPlayer)) {
       return {
         score: 10
       };
@@ -171,11 +172,11 @@ export default class GameBoard extends Component {
       var move = {};
       move.index = reboard[array[i]];
       reboard[array[i]] = player;
-      if (player == that.state.aiPlayer) {
-        var g = that.minimax(reboard, that.state.huPlayer, that);
+      if (player == this.state.aiPlayer) {
+        var g = this.minimax(reboard, this.state.huPlayer);
         move.score = g.score;
       } else {
-        var g = that.minimax(reboard, that.state.aiPlayer, that);
+        var g = this.minimax(reboard, this.state.aiPlayer);
         move.score = g.score;
       }
       reboard[array[i]] = move.index;
@@ -183,7 +184,7 @@ export default class GameBoard extends Component {
     }
 
     var bestMove;
-    if (player === that.state.aiPlayer) {
+    if (player === this.state.aiPlayer) {
       var bestScore = -10000;
       for (var i = 0; i < moves.length; i++) {
         if (moves[i].score > bestScore) {
