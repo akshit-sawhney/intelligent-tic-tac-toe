@@ -1,5 +1,15 @@
 {
   "expo": {
-    "sdkVersion": "25.0.0"
-  }
+    "name": "Intelligent Tic-tac-toe",
+    "icon": "./img/tic_tac_toe.png",
+    "version": "1.0.0",
+    "slug": "tic-tac-toe",
+    "sdkVersion": "25.0.0",
+    "ios": {
+      "bundleIdentifier": "com.akshit.ticTacToe"
+    },
+    "android": {
+      "package": "com.akshit.ticTacToe"
+    }
+   }
 }
